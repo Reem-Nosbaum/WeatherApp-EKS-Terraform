@@ -19,7 +19,7 @@ module "eks" {
   source = "./modules/eks"
 
   cluster_name    = "my-eks-cluster"
-  cluster_version = "1.26"
+  cluster_version = "1.25"
   desired_capacity = 2
   min_size         = 1
   max_size         = 3
@@ -27,6 +27,7 @@ module "eks" {
   subnet_ids       = module.vpc.private_subnet_ids
   vpc_id           = module.vpc.vpc_id
   project_tag      = "my-eks-project"
+  region           = "us-east-1"
 
   cluster_role_arn = module.iam.eks_cluster_role_arn
   node_role_arn    = module.iam.eks_node_role_arn

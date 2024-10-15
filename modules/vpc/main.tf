@@ -14,8 +14,9 @@ resource "aws_subnet" "public_subnet_1" {
   availability_zone       = "${var.region}a"
   map_public_ip_on_launch = true
   tags = {
-    Name    = "dev-public-subnet-1"
-    Project = var.project_tag
+    Name                          = "dev-public-subnet-1"
+    Project                       = var.project_tag
+    "kubernetes.io/role/elb"      = "1"  # Required tag for AWS ALB discovery
   }
 }
 
@@ -25,8 +26,9 @@ resource "aws_subnet" "public_subnet_2" {
   availability_zone       = "${var.region}b"
   map_public_ip_on_launch = true
   tags = {
-    Name    = "dev-public-subnet-2"
-    Project = var.project_tag
+    Name                          = "dev-public-subnet-2"
+    Project                       = var.project_tag
+    "kubernetes.io/role/elb"      = "1"  # Required tag for AWS ALB discovery
   }
 }
 
@@ -35,8 +37,9 @@ resource "aws_subnet" "private_subnet_1" {
   cidr_block        = var.private_subnet_cidr_1
   availability_zone = "${var.region}a"
   tags = {
-    Name    = "dev-private-subnet-1"
-    Project = var.project_tag
+    Name                               = "dev-private-subnet-1"
+    Project                            = var.project_tag
+    "kubernetes.io/role/internal-elb"  = "1"  # Optional tag for internal ALBs
   }
 }
 
@@ -45,8 +48,9 @@ resource "aws_subnet" "private_subnet_2" {
   cidr_block        = var.private_subnet_cidr_2
   availability_zone = "${var.region}b"
   tags = {
-    Name    = "dev-private-subnet-2"
-    Project = var.project_tag
+    Name                               = "dev-private-subnet-2"
+    Project                            = var.project_tag
+    "kubernetes.io/role/internal-elb"  = "1"  # Optional tag for internal ALBs
   }
 }
 
@@ -140,7 +144,7 @@ resource "aws_security_group" "sg_vpc_endpoints" {
   }
 
   tags = {
-    Name = "vpc-endpoints-sg"
+    Name    = "vpc-endpoints-sg"
     Project = var.project_tag
   }
 }
