@@ -1,34 +1,41 @@
-module "vpc" {
-  source = "./modules/vpc"
-
-  vpc_cidr            = "10.0.0.0/16"
-  public_subnet_cidr_1 = "10.0.1.0/24"
-  public_subnet_cidr_2 = "10.0.2.0/24"
-  private_subnet_cidr_1 = "10.0.3.0/24"
-  private_subnet_cidr_2 = "10.0.4.0/24"
-  region              = "us-east-1"
-  project_tag         = "my-eks-project"
+provider "aws" {
+  region = "us-east-1"
 }
 
-module "iam" {
-  source = "./modules/iam"
-  project_tag = "my-eks-project"
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_name
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.cluster.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+}
+
+module "vpc" {
+  source = "./modules/vpc"
 }
 
 module "eks" {
-  source = "./modules/eks"
+  source      = "./modules/eks"
+  subnet_ids  = module.vpc.private_subnet_ids
+}
 
-  cluster_name    = "my-eks-cluster"
-  cluster_version = "1.25"
-  desired_capacity = 2
-  min_size         = 1
-  max_size         = 3
-  instance_type    = "t3.medium"
-  subnet_ids       = module.vpc.private_subnet_ids
-  vpc_id           = module.vpc.vpc_id
-  project_tag      = "my-eks-project"
-  region           = "us-east-1"
+module "alb_controller" {
+  source       = "./modules/alb_controller"
+  cluster_name = module.eks.cluster_name
+  oidc_issuer  = module.eks.oidc_issuer
+  helm_version = "1.2.0"
+}
 
-  cluster_role_arn = module.iam.eks_cluster_role_arn
-  node_role_arn    = module.iam.eks_node_role_arn
+provider "helm" {
+  kubernetes {
+    host                   = data.aws_eks_cluster.cluster.endpoint
+    token                  = data.aws_eks_cluster_auth.cluster.token
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  }
 }
